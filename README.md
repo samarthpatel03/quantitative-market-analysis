@@ -17,10 +17,19 @@ up or down the next day using historical price data and technical indicators.
 ## Features Engineered
 - Simple Moving Averages (SMA 20, SMA 50)
 - Relative Strength Index (RSI)
-- MACD, Signal Line, MACD Histogram
-- Bollinger Bands & BB Width
+- MACD & MACD Histogram
+- Signal Line
+- Bollinger Band Width
 - Momentum
 - Volatility
+
+## Exploratory Data Analysis
+- Price trend with Golden Cross & Death Cross analysis
+- RSI overbought/oversold signals
+- MACD Histogram momentum phases
+- Daily return distribution with fat tail analysis
+- Feature correlation heatmap
+- Bollinger Bands with support/resistance zones
 
 ## Models (Coming Soon)
 - Logistic Regression (baseline)
@@ -28,7 +37,10 @@ up or down the next day using historical price data and technical indicators.
 - XGBoost Classifier
 
 ## Project Status
-🔄 Work in Progress — Feature Engineering Complete
+✅ Data Collection — Complete
+✅ Feature Engineering — Complete  
+✅ Exploratory Data Analysis — Complete
+🔄 Modelling — In Progress
 
 ## Author
 Samarth Patel
