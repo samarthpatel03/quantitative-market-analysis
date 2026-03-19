@@ -38,9 +38,10 @@ up or down the next day using historical price data and technical indicators.
 
 ## Project Status
 ✅ Data Collection — Complete
-✅ Feature Engineering — Complete  
-✅ Exploratory Data Analysis — Complete
-🔄 Modelling — In Progress
+✅ Feature Engineering — Complete
+✅ Exploratory Data Analysis — Complete  
+✅ Modelling — Complete
+✅ Strategy Evaluation — Complete
 
 ## Author
 Samarth Patel
