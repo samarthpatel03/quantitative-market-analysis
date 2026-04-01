@@ -126,5 +126,4 @@ quantitative-market-analysis/
 
 ## Author
 Samarth Patel  
-B.Tech CSE — Kanpur Institute of Technology  
 github.com/samarthpatel03
