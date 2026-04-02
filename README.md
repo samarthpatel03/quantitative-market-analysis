@@ -104,10 +104,16 @@ streamlit run app.py
 ```
 quantitative-market-analysis/
 │
-├── stock_prediction.ipynb    # Main analysis notebook
-├── app.py                    # Streamlit web application
-├── best_model.joblib         # Saved Random Forest model
-├── requirements.txt          # Dependencies
+├── src/
+│   ├── __init__.py
+│   ├── data_loader.py     # Data download
+│   ├── features.py        # Feature engineering
+│   ├── model.py           # Training and prediction
+│   └── utils.py           # Visualization helpers
+│
+├── stock_prediction.ipynb # Research notebook
+├── app.py                 # Streamlit web app
+├── requirements.txt       # Dependencies
 └── README.md
 ```
 
