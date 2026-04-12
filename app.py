@@ -133,6 +133,29 @@ if st.button("Predict"):
             st.subheader("RSI Indicator")
             fig2 = plot_rsi(df, ticker)
             st.pyplot(fig2)
+            
+
+            # ── Sentiment Analysis ────────────────────────────────────────
+            st.divider()
+            st.subheader("News Sentiment Analysis")
+
+            from src.sentiment import get_news_sentiment, interpret_sentiment
+
+            with st.spinner("Fetching latest news..."):
+                sentiment_score, headlines = get_news_sentiment(ticker)
+                sentiment_label = interpret_sentiment(sentiment_score)
+
+            col_s1, col_s2 = st.columns(2)
+            col_s1.metric("Sentiment Score", f"{sentiment_score:.4f}")
+            col_s2.metric("Market Sentiment", sentiment_label)
+
+            if headlines:
+                st.write("**Latest Headlines:**")
+                for h in headlines[:5]:
+                    color = "🟢" if h['sentiment'] > 0.05 else "🔴" if h['sentiment'] < -0.05 else "⚪"
+                    st.write(f"{color} {h['headline']}")
+            else:
+                st.write("No recent news found.")
 
             # ── Recent Data ───────────────────────────────────
             st.divider()
