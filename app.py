@@ -7,9 +7,10 @@ sys.path.append('.')
 from src.data_loader import download_stock_data
 from src.features import calculate_features, FEATURES
 from src.model import (train_test_split_timeseries, train_random_forest,
-                       evaluate_model, calculate_strategy_returns, predict_next_day)
+                       evaluate_model, calculate_strategy_returns, 
+                       predict_next_day, predict_with_sentiment)
 from src.utils import plot_price_with_sma, plot_rsi
-
+from src.sentiment import get_news_sentiment, interpret_sentiment
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -86,7 +87,9 @@ if st.button("Predict"):
             buy_hold, strategy = calculate_strategy_returns(df, predictions, split)
 
             # Predict tomorrow
-            prediction, confidence = predict_next_day(model, df, FEATURES)
+            sentiment_score, headlines = get_news_sentiment(ticker)
+            prediction, final_confidence, final_signal = predict_with_sentiment(
+            model, df, FEATURES, sentiment_score)
 
             # ── Results ──────────────────────────────────────
             st.divider()
@@ -100,11 +103,11 @@ if st.button("Predict"):
             st.divider()
 
             if prediction == 1:
-                st.success(f"📈 BUY — Model predicts {ticker} will go UP tomorrow")
-                st.metric("Confidence", f"{confidence[1]*100:.0f}%")
+                st.success(f"📈 {final_signal}")
+                st.metric("Confidence", f"{final_confidence*100:.0f}%")
             else:
-                st.error(f"📉 SELL/HOLD — Model predicts {ticker} will go DOWN tomorrow")
-                st.metric("Confidence", f"{confidence[0]*100:.0f}%")
+                st.error(f"📉 {final_signal}")
+                st.metric("Confidence", f"{final_confidence*100:.0f}%")
 
             # ── Technical Indicators ─────────────────────────
             st.divider()
@@ -141,12 +144,9 @@ if st.button("Predict"):
 
             from src.sentiment import get_news_sentiment, interpret_sentiment
 
-            with st.spinner("Fetching latest news..."):
-                sentiment_score, headlines = get_news_sentiment(ticker)
-                sentiment_label = interpret_sentiment(sentiment_score)
-
             col_s1, col_s2 = st.columns(2)
             col_s1.metric("Sentiment Score", f"{sentiment_score:.4f}")
+            sentiment_label = interpret_sentiment(sentiment_score)
             col_s2.metric("Market Sentiment", sentiment_label)
 
             if headlines:

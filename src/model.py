@@ -57,6 +57,31 @@ def predict_next_day(model, df, features):
     confidence = model.predict_proba(latest)[0]
     return prediction, confidence
 
+def predict_with_sentiment(model, df, features, sentiment_score):
+    """
+    Predict tomorrow's direction adjusted by news sentiment.
+    """
+    latest = df[features].iloc[-1:]
+    prediction = model.predict(latest)[0]
+    confidence = model.predict_proba(latest)[0]
+    
+    # Sentiment adjustment
+    if prediction == 1:  # model says UP
+        if sentiment_score < -0.2:  # but news is very negative
+            final_signal = "WEAK BUY — Model bullish but sentiment negative"
+            final_confidence = confidence[1] * 0.8  # reduce confidence
+        else:
+            final_signal = "STRONG BUY — Model bullish and sentiment confirms"
+            final_confidence = confidence[1]
+    else:  # model says DOWN
+        if sentiment_score > 0.2:  # but news is very positive
+            final_signal = "WEAK SELL — Model bearish but sentiment positive"
+            final_confidence = confidence[0] * 0.8
+        else:
+            final_signal = "STRONG SELL — Model bearish and sentiment confirms"
+            final_confidence = confidence[0]
+    
+    return prediction, final_confidence, final_signal
 
 def save_model(model, path='best_model.joblib'):
     """Save trained model to disk."""
