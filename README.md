@@ -1,16 +1,12 @@
 # Quantitative Market Analysis
 
 A machine learning project that predicts stock market movement direction 
-using technical indicators and quantitative analysis techniques.
-Includes a live web application for real-time trading signals.
-
-## Live Demo
-Run the Streamlit app locally for live BUY/SELL predictions on any NSE stock.
+using technical indicators, news sentiment analysis, and quantitative techniques.
+Includes a live web application for real-time trading signals on any NSE stock.
 
 ## Current Project — Stock Movement Prediction
-Predicting whether Reliance Industries (RELIANCE.NS) stock will go
-up or down the next trading day using historical price data and 
-technical indicators.
+Predicting whether a stock will go UP or DOWN the next trading day using 
+historical price data, technical indicators, and real-time news sentiment.
 
 ## Tech Stack
 - Python
@@ -19,7 +15,26 @@ technical indicators.
 - yfinance
 - Matplotlib, Seaborn
 - Streamlit
+- VADER Sentiment Analyzer
 - Joblib
+
+## Project Structure
+```
+quantitative-market-analysis/
+│
+├── src/
+│   ├── __init__.py
+│   ├── data_loader.py     # Data download
+│   ├── features.py        # Feature engineering
+│   ├── model.py           # Training and prediction
+    ├── sentiment.py       # News sentiment analysis
+│   └── utils.py           # Visualization helpers
+│
+├── stock_prediction.ipynb # Research notebook
+├── app.py                 # Streamlit web app
+├── requirements.txt       # Dependencies
+└── README.md
+```
 
 ## Features Engineered
 | Indicator | Type | Purpose |
@@ -31,6 +46,15 @@ technical indicators.
 | Bollinger Band Width | Volatility | Market squeeze detection |
 | Momentum | Momentum | 10-day price change |
 | Volatility | Risk | Rolling standard deviation of returns |
+| News Sentiment | Sentiment | VADER analysis of Yahoo Finance headlines |
+
+## Sentiment Analysis
+Fetches latest stock specific news from Yahoo Finance and analyzes sentiment 
+using VADER. Combines ML prediction with sentiment for stronger signals:
+- **STRONG BUY** — Model predicts UP + positive/neutral sentiment
+- **WEAK BUY** — Model predicts UP but sentiment is negative
+- **STRONG SELL** — Model predicts DOWN + negative/neutral sentiment
+- **WEAK SELL** — Model predicts DOWN but sentiment is positive
 
 ## Exploratory Data Analysis
 - Price trend with Golden Cross & Death Cross analysis
@@ -45,7 +69,7 @@ technical indicators.
 |-------|----------|
 | Logistic Regression | 47.83% |
 | XGBoost | 49.46% |
-| **Random Forest** | **52.72%** ✅ |
+| **Random Forest** | **52-56%** ✅ |
 
 ## Strategy Results
 | Metric | Result |
@@ -55,17 +79,17 @@ technical indicators.
 | ML Strategy Return | **-0.11%** |
 | Outperformance | **+2.94%** |
 
-> During a declining market period, the ML strategy preserved capital 
-> better than passive holding — demonstrating downside protection 
-> capability of the model.
+> During a declining market period the ML strategy preserved capital 
+> better than passive holding — demonstrating downside protection.
 
 ## Key Findings
 - Volume is the most important predictive feature (9.09% importance)
 - Volatility and Bollinger Band Width outperform price-based features
-- Model shows asymmetric performance — better at identifying DOWN days (61% accuracy) than UP days
+- Model shows asymmetric performance — better at identifying DOWN days (61%) than UP days (44%)
 - Logistic Regression underperformed below random chance — confirming stock direction is a non-linear problem
 - Efficient Market Hypothesis limits accuracy of technical indicators alone
-- Model adds most value in choppy/sideways markets as a defensive strategy
+- Model accuracy varies by stock — 50-56% depending on market efficiency
+- Sentiment analysis strengthens signals when aligned with model prediction
 
 ## Confusion Matrix Insights
 - True Negatives (DOWN correctly predicted): 58/95 = 61%
@@ -85,12 +109,13 @@ technical indicators.
 Built with Streamlit — enter any NSE ticker for live predictions.
 
 **Features:**
-- Real-time data download via yfinance
-- Automatic technical indicator calculation
-- BUY/SELL signal with confidence score
+- Dynamic model training per stock — no single pre-trained model
+- STRONG/WEAK BUY or SELL signal with adjusted confidence
+- Real-time news sentiment from Yahoo Finance via yfinance
 - Price chart with moving averages
 - RSI indicator chart
-- Current indicator values
+- Current technical indicator values
+- Strategy performance vs buy and hold
 
 **Run locally:**
 ```bash
@@ -100,36 +125,21 @@ streamlit run app.py
 
 **Note:** Run after 3:30 PM IST for accurate next-day predictions.
 
-## Project Structure
-```
-quantitative-market-analysis/
-│
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py     # Data download
-│   ├── features.py        # Feature engineering
-│   ├── model.py           # Training and prediction
-│   └── utils.py           # Visualization helpers
-│
-├── stock_prediction.ipynb # Research notebook
-├── app.py                 # Streamlit web app
-├── requirements.txt       # Dependencies
-└── README.md
-```
-
 ## Limitations
-- Based on technical indicators only — no fundamental or sentiment data
+- Technical indicators based on historical patterns only
+- Sentiment analysis limited to English language news
 - Model performance varies with market regime changes
-- Not suitable for live trading without proper risk management
 - Transaction costs not accounted for in strategy returns
+- Not suitable for live trading without proper risk management
 
 ## Future Work
-- Add news sentiment analysis
+- ~~Add news sentiment analysis~~ ✅ Completed
 - Include fundamental indicators (P/E ratio, EPS)
-- Implement proper backtesting with transaction costs
-- Expand to multiple stocks
+- Implement walk-forward validation
 - Add Sharpe ratio and maximum drawdown metrics
+- Expand to Hindi financial news sources
+- Deploy to Streamlit Cloud for public access
 
 ## Author
-Samarth Patel  
+Samarth Patel
 github.com/samarthpatel03
