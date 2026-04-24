@@ -4,10 +4,17 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
 from xgboost import XGBClassifier
+import pandas as pd
+from typing import Tuple, List
 import joblib
 
 
-def train_test_split_timeseries(df, features, target='Target', split_ratio=0.80):
+def train_test_split_timeseries(
+    df: pd.DataFrame,
+    features: List[str],
+    target: str = 'Target',
+    split_ratio: float = 0.80
+) -> Tuple:
     """Chronological train/test split — no shuffling."""
     X = df[features]
     y = df[target]
@@ -20,14 +27,21 @@ def train_test_split_timeseries(df, features, target='Target', split_ratio=0.80)
     return X_train, X_test, y_train, y_test, split
 
 
-def train_random_forest(X_train, y_train):
+def train_random_forest(
+    X_train: pd.DataFrame,
+    y_train: pd.Series
+) -> RandomForestClassifier:
     """Train Random Forest classifier."""
     model = RandomForestClassifier(n_estimators=100, random_state=42)
     model.fit(X_train, y_train)
     return model
 
 
-def evaluate_model(model, X_test, y_test):
+def evaluate_model(
+    model: RandomForestClassifier,
+    X_test: pd.DataFrame,
+    y_test: pd.Series
+) -> Tuple[np.ndarray, float, str]:
     """Evaluate model and return metrics."""
     predictions = model.predict(X_test)
     accuracy = accuracy_score(y_test, predictions)
@@ -91,3 +105,36 @@ def save_model(model, path='best_model.joblib'):
 def load_model(path='best_model.joblib'):
     """Load saved model from disk."""
     return joblib.load(path)
+
+def walk_forward_validation(df, features, n_splits=5, target='Target'):
+    """
+    Simulates real trading: trains on past data, tests on future data.
+    Rolls forward in equal-sized windows.
+    Returns average accuracy across all folds.
+    """
+    total_len = len(df)
+    fold_size = total_len // (n_splits + 1)  # +1 because first fold is train-only
+    
+    accuracies = []
+    
+    for i in range(1, n_splits + 1):
+        train_end = fold_size * i
+        test_end  = train_end + fold_size
+        
+        if test_end > total_len:
+            break
+        
+        X_train = df[features].iloc[:train_end]
+        y_train = df[target].iloc[:train_end]
+        X_test  = df[features].iloc[train_end:test_end]
+        y_test  = df[target].iloc[train_end:test_end]
+        
+        model = RandomForestClassifier(n_estimators=100, random_state=42)
+        model.fit(X_train, y_train)
+        preds = model.predict(X_test)
+        
+        acc = accuracy_score(y_test, preds)
+        accuracies.append(acc)
+    
+    avg_accuracy = sum(accuracies) / len(accuracies)
+    return accuracies, avg_accuracy

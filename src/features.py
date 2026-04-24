@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 
-def calculate_features(df):
+def calculate_features(df: pd.DataFrame) -> pd.DataFrame:
     """Calculate all technical indicators from OHLCV data."""
     
     df = df.copy()
@@ -41,10 +41,3 @@ def calculate_features(df):
     df.dropna(inplace=True)
     
     return df
-
-
-# Features list used for modelling
-FEATURES = ['Close', 'High', 'Low', 'Open', 'Volume',
-            'SMA_20', 'SMA_50', 'RSI', 'MACD',
-            'Signal_Line', 'MACD_Histogram', 'bb_Width',
-            'Momentum', 'Volatility']

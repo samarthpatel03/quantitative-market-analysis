@@ -4,11 +4,28 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('.')
 
+from src.model import walk_forward_validation
 from src.data_loader import download_stock_data
-from src.features import calculate_features, FEATURES
+from src.features import calculate_features
+from src.config import FEATURES
 from src.model import (train_test_split_timeseries, train_random_forest,
-                       evaluate_model, calculate_strategy_returns, 
+                       evaluate_model, calculate_strategy_returns,
                        predict_next_day, predict_with_sentiment)
+
+@st.cache_data(ttl=3600)
+def load_and_prepare(ticker: str, start_date: str, end_date: str):
+    df_raw = download_stock_data(ticker, start_date, end_date)
+    df = calculate_features(df_raw)
+    return df
+
+@st.cache_data(ttl=3600)
+def train_model_cached(ticker: str, _df):
+    # ticker is only here so the cache key is ticker-specific
+    X_train, X_test, y_train, y_test, split = train_test_split_timeseries(_df, FEATURES)
+    model = train_random_forest(X_train, y_train)
+    return model, X_train, X_test, y_train, y_test, split
+
+
 from src.utils import plot_price_with_sma, plot_rsi
 from src.sentiment import get_news_sentiment, interpret_sentiment
 import warnings
@@ -50,6 +67,17 @@ st.title("📈 Stock Movement Predictor")
 st.subheader("Predict whether a stock will go UP or DOWN tomorrow")
 
 ticker = st.text_input("Enter NSE Stock Ticker", value="RELIANCE.NS")
+ticker = ticker.strip().upper()
+
+# Warn if user forgot .NS suffix
+if ticker and not ticker.endswith(".NS") and not ticker.endswith(".BO"):
+    st.warning(
+        f"⚠️ Looks like you entered '{ticker}' — NSE tickers need a '.NS' suffix "
+        f"(e.g. '{ticker}.NS'). BSE tickers use '.BO'."
+    )
+    auto_ticker = ticker + ".NS"
+    if st.button(f"Use {auto_ticker} instead?"):
+        ticker = auto_ticker
 
 # ── Predict Button ────────────────────────────────────────────
 if st.button("Predict"):
@@ -61,27 +89,30 @@ if st.button("Predict"):
             start_date = (datetime.datetime.today() -
                          datetime.timedelta(days=1095)).strftime('%Y-%m-%d')
 
-            df_raw = download_stock_data(ticker, start_date, yesterday)
+            df = load_and_prepare(ticker, start_date, yesterday)
 
-            if df_raw.empty:
+            if df.empty:
                 st.error("No data found. Please check the ticker symbol.")
                 st.stop()
-
-            # Feature engineering
-            df = calculate_features(df_raw)
 
             if len(df) < 100:
                 st.error("Not enough data to train. Try a different ticker.")
                 st.stop()
 
-            # Train/test split
-            X_train, X_test, y_train, y_test, split = train_test_split_timeseries(df, FEATURES)
-
-            # Train model
-            model = train_random_forest(X_train, y_train)
-
-            # Evaluate
+            model, X_train, X_test, y_train, y_test, split = train_model_cached(ticker, df)
             predictions, accuracy, report = evaluate_model(model, X_test, y_test)
+
+            wf_accuracies, wf_avg = walk_forward_validation(df, FEATURES)
+
+            st.divider()
+            st.subheader("Walk-forward Validation")
+            st.caption("Trains on past data only and tests on future — more realistic than a single train/test split.")
+
+            wf_cols = st.columns(len(wf_accuracies) + 1)
+            for i, acc in enumerate(wf_accuracies):
+                wf_cols[i].metric(f"Fold {i+1}", f"{acc*100:.1f}%")
+            wf_cols[-1].metric("Average", f"{wf_avg*100:.1f}%", 
+                    delta="vs single split" if abs(wf_avg - accuracy) > 0.02 else None)
 
             # Strategy returns
             buy_hold, strategy = calculate_strategy_returns(df, predictions, split)
@@ -141,8 +172,6 @@ if st.button("Predict"):
             # ── Sentiment Analysis ────────────────────────────────────────
             st.divider()
             st.subheader("News Sentiment Analysis")
-
-            from src.sentiment import get_news_sentiment, interpret_sentiment
 
             col_s1, col_s2 = st.columns(2)
             col_s1.metric("Sentiment Score", f"{sentiment_score:.4f}")

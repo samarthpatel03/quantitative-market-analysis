@@ -1,9 +1,14 @@
 import yfinance as yf
+from typing import Tuple, List
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 analyzer = SentimentIntensityAnalyzer()
 
-def get_news_sentiment(ticker, api_key=None, days=30):
+def get_news_sentiment(
+    ticker: str,
+    api_key: str = None,
+    days: int = 30
+) -> Tuple[float, List[dict]]:
     """
     Fetch stock specific news from yfinance and calculate sentiment score.
     Returns average sentiment score between -1 and +1.
@@ -41,7 +46,7 @@ def get_news_sentiment(ticker, api_key=None, days=30):
         return 0.0, []
 
 
-def interpret_sentiment(score):
+def interpret_sentiment(score: float) -> str:
     """Convert sentiment score to human readable label."""
     if score >= 0.05:
         return "Positive 😊"
