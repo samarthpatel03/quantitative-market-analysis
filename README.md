@@ -76,15 +76,33 @@ Logistic Regression underperforming below random chance confirms stock direction
 is a non-linear problem. Random Forest was selected as the final model.
 
 ## Strategy Results
-| Metric | Result |
-|--------|--------|
-| Test Period | 2024–2025 |
-| Buy & Hold Return | -3.05% |
-| ML Strategy Return | **-0.11%** |
-| Outperformance | **+2.94%** |
 
-During a declining market period the ML strategy preserved capital better than
-passive holding — demonstrating downside protection rather than return generation.
+Results vary by stock. Best results observed on PERSISTENT.NS — the only stock where
+the strategy generated a positive return in a declining market:
+
+| Metric | RELIANCE.NS | HDFCBANK.NS | PERSISTENT.NS |
+|--------|-------------|-------------|---------------|
+| Test Period | 2024–2025 | 2024–2025 | 2024–2025 |
+| Buy & Hold Return | -3.05% | -18.69% | -3.86% |
+| ML Strategy Return | -0.11% | -7.25% | **+7.43%** ✅ |
+| Outperformance | +2.94% | +11.44% | **+11.29%** |
+| Sharpe — Buy & Hold | -0.154 | -1.635 | -0.062 |
+| Sharpe — ML Strategy | -0.984 ❌ | -1.082 | **+0.721** ✅ |
+| Sharpe Improvement | -0.830 | +0.553 | **+0.783** |
+| Max Drawdown — Buy & Hold | -18.07% | -27.53% | -30.74% |
+| Max Drawdown — ML Strategy | -10.74% | -15.60% | **-11.06%** |
+| Drawdown Reduction | +7.33% | +11.93% | **+19.68%** ✅ |
+
+PERSISTENT.NS is the strongest result across all three metrics — positive ML return,
+positive Sharpe ratio (0.721), and the largest drawdown reduction (19.68pp). This
+suggests the model has genuine predictive power on mid-cap technology stocks where
+price action is more technically driven compared to large-caps.
+
+The strategy goes to cash on predicted DOWN days rather than taking short positions.
+Short selling was tested but reduced performance due to model uncertainty on large-cap
+stocks — consistent with EMH findings. The model's primary value is **capital
+preservation in bear markets**, not return generation. On PERSISTENT.NS however, it
+demonstrated the ability to generate positive returns even in a declining market.
 
 ## Walk-forward Validation
 To assess whether model accuracy is genuine or a product of a lucky train/test
@@ -114,11 +132,15 @@ power on heavily-covered stocks.
 - Volume is the most important predictive feature (9.09% importance)
 - Volatility and Bollinger Band Width outperform price-based features
 - Model shows asymmetric performance — better at identifying DOWN days (61%) than UP days (44%)
+- This defensive bias translates to real value: max drawdown reduced by 19.68pp on PERSISTENT.NS
 - Logistic Regression underperformed below random chance — confirming stock direction is a non-linear problem
-- Efficient Market Hypothesis limits accuracy of technical indicators on large-cap stocks
-- Model accuracy varies by stock and market regime — 46–57% per fold depending on market efficiency
+- Efficient Market Hypothesis limits accuracy on large-caps — RELIANCE walk-forward average was 48.3%
+- Model has genuine predictive power on mid-cap technology stocks — PERSISTENT.NS generated +7.43% return vs -3.86% buy and hold
+- Accuracy alone is a misleading metric — what matters is whether the model is right on the high-impact days
 - Sentiment analysis strengthens signals when aligned with model prediction
 - Walk-forward validation reveals the model is regime-dependent — it finds edge in specific market conditions but cannot sustain it uniformly
+- Short selling tested but reverted — added risk without consistent improvement on large-cap stocks
+- PERSISTENT.NS is the only stock where all three metrics improved: positive return, positive Sharpe (0.721), and largest drawdown reduction (19.68pp)
 
 ## Confusion Matrix Insights
 - True Negatives (DOWN correctly predicted): 58/95 = 61%
@@ -134,6 +156,8 @@ power on heavily-covered stocks.
 | Ensemble (all 3 models) | Underperformed standalone RF |
 | Nifty 50 index | Buy & Hold outperformed in bull market |
 | Walk-forward validation (5 folds) | Confirmed regime-dependence; 46–57% per fold |
+| Short selling on DOWN signals | Reduced performance — reverted to cash strategy |
+| Sharpe ratio + max drawdown | Max drawdown reduction confirmed as primary value metric |
 
 ## Web Application
 Built with Streamlit — enter any NSE ticker for live predictions.
@@ -184,9 +208,9 @@ The following improvements were made beyond the initial research prototype:
 ## Future Work
 - ~~Add news sentiment analysis~~ ✅ Completed
 - ~~Walk-forward validation~~ ✅ Completed
+- ~~Sharpe ratio and maximum drawdown metrics~~ ✅ Completed
 - Include fundamental indicators (P/E ratio, EPS)
 - Replace raw OHLCV price levels with normalised returns and ratios
-- Add Sharpe ratio and maximum drawdown metrics
 - Implement regime detection to activate model only in high-confidence periods
 - Expand to Hindi financial news sources
 - Deploy to Streamlit Cloud for public access

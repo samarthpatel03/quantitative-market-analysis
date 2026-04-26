@@ -11,6 +11,10 @@ from src.config import FEATURES
 from src.model import (train_test_split_timeseries, train_random_forest,
                        evaluate_model, calculate_strategy_returns,
                        predict_next_day, predict_with_sentiment)
+from src.model import (train_test_split_timeseries, train_random_forest,
+                       evaluate_model, calculate_strategy_returns,
+                       predict_next_day, predict_with_sentiment,
+                       walk_forward_validation, calculate_risk_metrics)
 
 @st.cache_data(ttl=3600)
 def load_and_prepare(ticker: str, start_date: str, end_date: str):
@@ -117,6 +121,9 @@ if st.button("Predict"):
             # Strategy returns
             buy_hold, strategy = calculate_strategy_returns(df, predictions, split)
 
+            # Risk metrics
+            risk = calculate_risk_metrics(df, predictions, split)
+
             # Predict tomorrow
             sentiment_score, headlines = get_news_sentiment(ticker)
             prediction, final_confidence, final_signal = predict_with_sentiment(
@@ -152,11 +159,34 @@ if st.button("Predict"):
             # ── Strategy Returns ──────────────────────────────
             st.divider()
             st.subheader("Strategy Performance")
+
             s1, s2, s3 = st.columns(3)
             s1.metric("Buy & Hold Return", f"{buy_hold:.2f}%")
             s2.metric("ML Strategy Return", f"{strategy:.2f}%")
             s3.metric("Outperformance", f"{strategy - buy_hold:.2f}%",
-                     delta=f"{strategy - buy_hold:.2f}%")
+                    delta=f"{strategy - buy_hold:.2f}%")
+            
+            st.caption("⚠️ Strategy goes to cash on predicted DOWN days. Short selling was tested but reduced performance due to model uncertainty on large-cap stocks — consistent with EMH findings.")
+
+            st.divider()
+
+            # Risk metrics table
+            r1, r2, r3 = st.columns(3)
+            r1.metric("Sharpe — Buy & Hold",  f"{risk['sharpe_market']:.3f}")
+            r2.metric("Sharpe — ML Strategy", f"{risk['sharpe_strategy']:.3f}",
+                    delta=f"{risk['sharpe_strategy'] - risk['sharpe_market']:.3f}")
+            r3.metric("Sharpe Improvement", 
+                    "Better ✅" if risk['sharpe_strategy'] > risk['sharpe_market'] else "Worse ❌")
+
+            r4, r5, r6 = st.columns(3)
+            r4.metric("Max Drawdown — Buy & Hold",  f"{risk['mdd_market']:.2f}%")
+            r5.metric("Max Drawdown — ML Strategy", f"{risk['mdd_strategy']:.2f}%",
+                    delta=f"{risk['mdd_strategy'] - risk['mdd_market']:.2f}%",
+                    delta_color="inverse")  # inverse because less negative = better
+            r6.metric("Drawdown Reduction",
+                    "Better ✅" if risk['mdd_strategy'] > risk['mdd_market'] else "Worse ❌")
+
+            st.caption("Sharpe ratio is annualised (×√252). Higher is better. Max drawdown is peak-to-trough decline. Less negative is better.")
 
             # ── Charts ────────────────────────────────────────
             st.divider()

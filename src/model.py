@@ -138,3 +138,40 @@ def walk_forward_validation(df, features, n_splits=5, target='Target'):
     
     avg_accuracy = sum(accuracies) / len(accuracies)
     return accuracies, avg_accuracy
+
+def calculate_risk_metrics(df: pd.DataFrame, predictions: np.ndarray, split: int) -> dict:
+    """
+    Calculate Sharpe ratio and maximum drawdown for ML strategy vs buy and hold.
+    """
+    test_returns = df['Close'].pct_change().iloc[split+1:].values
+    pred_aligned = predictions[:len(test_returns)]
+
+    strategy_returns = test_returns * pred_aligned
+
+    # ── Sharpe Ratio ─────────────────────────────────────────
+    # Annualised: multiply daily Sharpe by sqrt(252 trading days)
+    def sharpe(returns):
+        if returns.std() == 0:
+            return 0.0
+        return (returns.mean() / returns.std()) * np.sqrt(252)
+
+    sharpe_market   = sharpe(test_returns)
+    sharpe_strategy = sharpe(strategy_returns)
+
+    # ── Maximum Drawdown ──────────────────────────────────────
+    # Largest peak-to-trough decline in cumulative returns
+    def max_drawdown(returns):
+        cumulative = (1 + returns).cumprod()
+        rolling_max = np.maximum.accumulate(cumulative)
+        drawdowns = (cumulative - rolling_max) / rolling_max
+        return drawdowns.min() * 100  # as percentage
+
+    mdd_market   = max_drawdown(test_returns)
+    mdd_strategy = max_drawdown(strategy_returns)
+
+    return {
+        'sharpe_market':   round(sharpe_market, 3),
+        'sharpe_strategy': round(sharpe_strategy, 3),
+        'mdd_market':      round(mdd_market, 2),
+        'mdd_strategy':    round(mdd_strategy, 2),
+    }
