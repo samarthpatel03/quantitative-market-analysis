@@ -1,16 +1,12 @@
-import streamlit as st
+﻿import streamlit as st
 import datetime
 import matplotlib.pyplot as plt
 import sys
 sys.path.append('.')
 
-from src.model import walk_forward_validation
 from src.data_loader import download_stock_data
 from src.features import calculate_features
 from src.config import FEATURES
-from src.model import (train_test_split_timeseries, train_random_forest,
-                       evaluate_model, calculate_strategy_returns,
-                       predict_next_day, predict_with_sentiment)
 from src.model import (train_test_split_timeseries, train_random_forest,
                        evaluate_model, calculate_strategy_returns,
                        predict_next_day, predict_with_sentiment,
