@@ -11,3 +11,5 @@ wheels/
 
 # Joblib
 .joblib
+
+.lock
